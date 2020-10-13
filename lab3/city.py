@@ -57,7 +57,7 @@ y_car = 410
 surface_car = pygame.Surface((400, 500), pygame.SRCALPHA)
 
 def car(x, y):
-    d.rect(surface_car, black, (x - 35, y + 30, 10, 5, 255)
+    d.rect(surface_car, black, (x - 35, y + 30, 10, 5, 255))
     d.rect(surface_car, blue, (x, y, 80, 30, 255))
     d.rect(surface_car, blue, (x - 30, y + 20, 150, 20 ))
     d.rect(surface_car, white, (x + 5, y + 5, 20, 10))
