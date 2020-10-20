@@ -3,8 +3,9 @@ from pygame.draw import *
 from random import randint
 
 pygame.init()
-
-FPS = 1
+screen_w = 1200
+screen_h = 900
+FPS = 60
 screen = pygame.display.set_mode((1200, 900))
 
 # colors
@@ -20,20 +21,45 @@ COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
 # ball function
 def new_ball():
-    global x, y, r
     x = randint(100, 1100)
     y = randint(100, 900)
-    r = randint(10, 100)
+    vx = randint(-10, 10)
+    vy = randint(-10, 10)
+    r = randint(20, 50)
     color = COLORS[randint(0, 5)]
     circle(screen, color, (x, y), r)
+    return {
+        'vx': vx,
+        'vy': vy,
+        'x': x,
+        'y': y,
+        'r': r,
+        'color': color
+    }
+
+
+balls = [new_ball() for i in range(5)]
+
+
+# move
+def move():
+    for ball in balls:
+        circle(screen, ball['color'], (ball['x'], ball['y']), ball['r'])
+        ball['x'] += ball['vx']
+        ball['y'] += ball['vy']
+        if ball['x'] >= screen_w or ball['x'] <= 0:
+            ball['vx'] *= -1
+        if ball['y'] >= screen_h or ball['y'] <= 0:
+            ball['vy'] *= -1
 
 
 # score
 def score(pos):
-    if (pos[0] - x) ** 2 + (pos[1] - y) ** 2 <= r ** 2:
-        return 1
-    else:
-        return 0
+    for ball in balls:
+        if (pos[0] - ball['x']) ** 2 + (pos[1] - ball['y']) ** 2 <= ball['r'] ** 2:
+            return 1
+        else:
+            return 0
 
 
 # start point number
@@ -45,6 +71,7 @@ finished = False
 
 while not finished:
     clock.tick(FPS)
+    move()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
@@ -52,9 +79,6 @@ while not finished:
             print('Click!')
             if score(event.pos) == 1:
                 points += 1
-    new_ball()
-    new_ball()
-    new_ball()
     pygame.display.update()
     screen.fill(BLACK)
 print('Сумма очков:', points)
