@@ -1,4 +1,5 @@
 import pygame
+import os
 from pygame.draw import *
 from random import randint
 
@@ -7,6 +8,8 @@ pygame.init()
 
 screen_w = 1200
 screen_h = 900
+dvd_w = 512 * 0.5
+dvd_h = 250 * 0.5
 FPS = 60
 screen = pygame.display.set_mode((screen_w, screen_h))
 
@@ -14,24 +17,20 @@ font = pygame.font.Font(None, 50)
 
 # colors
 WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-GREEN = (0, 255, 0)
 MAGENTA = (255, 0, 255)
 CYAN = (0, 255, 255)
 BLACK = (0, 0, 0)
-COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
+COLORS = [MAGENTA, CYAN]
 
 
 # ball function
 def new_ball():
     x = randint(100, 1100)
     y = randint(100, 900)
-    vx = randint(0, 5)
+    vx = randint(-10, 10)
     vy = randint(-10, 10)
     r = randint(20, 50)
-    color = COLORS[randint(0, 5)]
+    color = COLORS[randint(0, 1)]
     circle(screen, color, (x, y), r)
     return {
         'vx': vx,
@@ -46,23 +45,42 @@ def new_ball():
 balls = [new_ball() for i in range(5)]
 
 
+# load image
+def load_image(name, colorkey=None):
+    fullname = os.path.join(os.path.dirname(__file__), name)
+    image = pygame.image.load(fullname).convert()
+    if colorkey is not None:
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+            image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
+
+
 # dvd function
 def dvd():
-    x = randint(100, 1100)
-    y = randint(100, 900)
-    vx = randint(-10, 10)
+    dvd_image = load_image('dvd.png', -1)
+    w, h = dvd_image.get_rect().size
+    print(w, h)
+    dvd_image = pygame.transform.scale(dvd_image, (int(w * 0.5), int(h * 0.5)))
+
+    x = randint(100, screen_w)
+    y = randint(100, screen_h)
+    vx = randint(50, 100)
     vy = randint(-10, 10)
-    r = randint(20, 50)
-    color = COLORS[randint(0, 5)]
-    circle(screen, color, (x, y), r)
+
     return {
         'vx': vx,
         'vy': vy,
         'x': x,
         'y': y,
-        'r': r,
-        'color': color
+        'image': dvd_image,
+        'rect': dvd_image.get_rect(center=(x, y))
     }
+
+
+dvds = [dvd() for i in range(1)]
 
 
 # move
@@ -76,10 +94,31 @@ def move():
         if ball['y'] >= screen_h or ball['y'] <= 0:
             ball['vy'] *= -1
 
+    for dvd in dvds:
+        screen.blit(dvd['image'], dvd['image'].get_rect(center=(dvd['x'], dvd['y'])))
+        dvd['x'] += dvd['vx']
+        dvd['y'] += dvd['vy']
+        if dvd['x'] >= screen_w or dvd['x'] <= 0:
+            dvd['vx'] *= -1
+        if dvd['y'] >= screen_h or dvd['y'] <= 0:
+            dvd['vy'] *= -1
+
 
 # score
-def score(pos):
-    return any((pos[0] - ball['x']) ** 2 + (pos[1] - ball['y']) ** 2 <= ball['r'] ** 2 for ball in balls)
+def score_ball(pos):
+    for ball in balls:
+        if (pos[0] - ball['x']) ** 2 + (pos[1] - ball['y']) ** 2 <= ball['r'] ** 2:
+            return 1
+        else:
+            return 0
+
+
+def score_dvd(pos):
+    for dvd in dvds:
+        if (pos[0] - dvd['x']) ** 2 + (pos[1] - dvd['y']) ** 2 <= dvd_w ** 2 + dvd_h ** 2:
+            return 5
+        else:
+            return 0
 
 
 # start point number
@@ -94,13 +133,15 @@ while not finished:
     score_text_surface = font.render(str(points), False, WHITE)
     clock.tick(FPS)
     move()
+
     screen.blit(score_text_surface, (0, 0))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             print('Click!')
-            points += score(event.pos)
+            points += score_ball(event.pos)
+            points -= score_dvd(event.pos)
     pygame.display.update()
     screen.fill(BLACK)
 print('Сумма очков:', points)
