@@ -1,0 +1,107 @@
+import pygame
+from pygame.draw import *
+from random import randint
+
+pygame.font.init()
+pygame.init()
+
+screen_w = 1200
+screen_h = 900
+FPS = 60
+screen = pygame.display.set_mode((screen_w, screen_h))
+
+font = pygame.font.Font(None, 50)
+
+# colors
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+GREEN = (0, 255, 0)
+MAGENTA = (255, 0, 255)
+CYAN = (0, 255, 255)
+BLACK = (0, 0, 0)
+COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
+
+
+# ball function
+def new_ball():
+    x = randint(100, 1100)
+    y = randint(100, 900)
+    vx = randint(0, 5)
+    vy = randint(-10, 10)
+    r = randint(20, 50)
+    color = COLORS[randint(0, 5)]
+    circle(screen, color, (x, y), r)
+    return {
+        'vx': vx,
+        'vy': vy,
+        'x': x,
+        'y': y,
+        'r': r,
+        'color': color
+    }
+
+
+balls = [new_ball() for i in range(5)]
+
+
+# dvd function
+def dvd():
+    x = randint(100, 1100)
+    y = randint(100, 900)
+    vx = randint(-10, 10)
+    vy = randint(-10, 10)
+    r = randint(20, 50)
+    color = COLORS[randint(0, 5)]
+    circle(screen, color, (x, y), r)
+    return {
+        'vx': vx,
+        'vy': vy,
+        'x': x,
+        'y': y,
+        'r': r,
+        'color': color
+    }
+
+
+# move
+def move():
+    for ball in balls:
+        circle(screen, ball['color'], (ball['x'], ball['y']), ball['r'])
+        ball['x'] += ball['vx']
+        ball['y'] += ball['vy']
+        if ball['x'] >= screen_w or ball['x'] <= 0:
+            ball['vx'] *= -1
+        if ball['y'] >= screen_h or ball['y'] <= 0:
+            ball['vy'] *= -1
+
+
+# score
+def score(pos):
+    return any((pos[0] - ball['x']) ** 2 + (pos[1] - ball['y']) ** 2 <= ball['r'] ** 2 for ball in balls)
+
+
+# start point number
+points = 0
+
+pygame.display.update()
+clock = pygame.time.Clock()
+finished = False
+
+# run
+while not finished:
+    score_text_surface = font.render(str(points), False, WHITE)
+    clock.tick(FPS)
+    move()
+    screen.blit(score_text_surface, (0, 0))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            finished = True
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            print('Click!')
+            points += score(event.pos)
+    pygame.display.update()
+    screen.fill(BLACK)
+print('Сумма очков:', points)
+pygame.quit()
