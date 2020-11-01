@@ -68,7 +68,7 @@ def dvd():
     x = randint(100, screen_w)
     y = randint(100, screen_h)
     vx = randint(50, 100)
-    vy = randint(-10, 10)
+    vy = randint(50, 100)
 
     return {
         'vx': vx,
